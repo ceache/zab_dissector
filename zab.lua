@@ -67,6 +67,8 @@ local opCodes = {
     [14] = "MULTI",
     [15] = "CREATE2",
     [16] = "RECONFIG",
+    [19] = "CREATE_CONTAINER",
+    [21] = "CREATE_TTL",
     [-10] = "CREATESESSION",
     [-11] = "CLOSE",
     [100] = "SETAUTH",
@@ -145,8 +147,11 @@ local f_perms           = ProtoField.int64("zab.permissions", "Permissions")
 local f_authtype        = ProtoField.int32("zab.authtype", "Authentication Type")
 local f_scheme          = ProtoField.string("zab.scheme", "Scheme")
 local f_credential      = ProtoField.string("zab.credential", "Credentials")
+local f_flags           = ProtoField.uint32("zab.flags", "Flags", base.HEX)
 local f_ephemeral       = ProtoField.bool("zab.ephemeral", "Ephemeral")
 local f_sequence        = ProtoField.bool("zab.sequence", "Sequence")
+local f_container       = ProtoField.bool("zab.container", "Container")
+local f_ttl             = ProtoField.uint64("zab.ttl", "TTL")
 local f_joining         = ProtoField.string("zab.joining", "Joining")
 local f_leaving         = ProtoField.string("zab.leaving", "Leaving")
 local f_newmembers      = ProtoField.string("zab.newmembers", "New Members")
@@ -936,7 +941,7 @@ local function dissectSyncReply(buf, pkt, tree, _state)
 end
 
 ------------------------------------------------------------------------------
--- CREATE // CREATE2 packets
+-- CREATE // CREATE2 // CREATE_TTL // CREATE_CONTAINER packets
 
 local function parseCreateRequest(buf)
     local offset = 0
@@ -951,17 +956,14 @@ local function parseCreateRequest(buf)
     if acls_offset == -1 then return -1, nil end
     offset = offset + acls_offset
     if offset + 4 > remain then return -1, nil end
-    local flags = buf(offset, 4):int()
+    local flags = buf(offset, 4)
     offset = offset + 4
-    local ephemeral = (bit.band(flags, 0x1) == 1)
-    local sequence = (bit.band(flags, 0x2) == 2)
 
     return offset, {
         path=path,
         data=data,
         acls=acls,
-        ephemeral=ephemeral,
-        sequence=sequence,
+        flags=flags,
     }
 end
 
@@ -969,25 +971,19 @@ local function reprCreateRequest(create_req, tree)
     tree:add(f_path, create_req.path)
     tree:add(f_data, create_req.data)
     reprAclsArray(create_req.acls, tree)
-    tree:add(f_ephemeral, create_req.ephemeral)
-    tree:add(f_sequence, create_req.sequence)
+    local t_flags = tree:add(f_flags, create_req.flags)
+    local ephemeral = (bit.band(create_req.flags:uint(), 0x1) == 1)
+    local sequence = (bit.band(create_req.flags:uint(), 0x2) == 2)
+    local container = (bit.band(create_req.flags:uint(), 0x4) == 4)
+    t_flags:add(f_ephemeral, ephemeral)
+    t_flags:add(f_sequence, sequence)
+    t_flags:add(f_container, container)
 end
 
 local function dissectCreateRequest(buf, pkt, tree, _state)
     local offset, create_req = parseCreateRequest(buf)
     if offset == -1 then return false end
     reprCreateRequest(create_req, tree)
-    return DissRes.Client
-end
-
-local parseCreate2Request = parseCreateRequest
-
-local reprCreate2Request = reprCreateRequest
-
-local function dissectCreate2Request(buf, pkt, tree, _state)
-    local offset, create_req = parseCreate2Request(buf)
-    if offset == -1 then return false end
-    reprCreate2Request(create_req, tree)
     return DissRes.Client
 end
 
@@ -1011,6 +1007,18 @@ local function dissectCreateReply(buf, pkt, tree, _state)
     if offset == -1 then return false end
     reprCreateReply(create_rep, tree)
     return DissRes.Server
+end
+
+
+local parseCreate2Request = parseCreateRequest
+
+local reprCreate2Request = reprCreateRequest
+
+local function dissectCreate2Request(buf, pkt, tree, _state)
+    local offset, create_req = parseCreate2Request(buf)
+    if offset == -1 then return false end
+    reprCreate2Request(create_req, tree)
+    return DissRes.Client
 end
 
 local function parseCreate2Reply(buf)
@@ -1043,6 +1051,90 @@ local function dissectCreate2Reply(buf, pkt, tree, _state)
 end
 
 
+local parseCreateContainerRequest = parseCreateRequest
+
+local reprCreateContainerRequest = reprCreateRequest
+
+local function dissectCreateContainerRequest(buf, pkt, tree, _state)
+    local offset, create_container_req = parseCreateContainerRequest(buf)
+    if offset == -1 then return false end
+    reprCreateContainerRequest(create_container_req, tree)
+    return DissRes.Client
+end
+
+local parseCreateContainerReply = parseCreate2Reply
+
+local reprCreateContainerReply = reprCreate2Reply
+
+local function dissectCreateContainerReply(buf, pkt, tree, _state)
+    local offset, create_container_rep = parseCreateContainerReply(buf)
+    if offset == -1 then return false end
+    reprCreateContainerReply(create_container_rep, tree)
+    return DissRes.Server
+end
+
+
+local function parseCreateTTLRequest(buf)
+    local offset = 0
+    local remain = buf:len()
+    local path_offset, path = parseString(buf(offset))
+    if path_offset == -1 then return -1, nil end
+    offset = offset + path_offset
+    local data_offset, data = parseString(buf(offset))
+    if data_offset == -1 then return -1, nil end
+    offset = offset + data_offset
+    local acls_offset, acls = parseAclsArray(buf(offset))
+    if acls_offset == -1 then return -1, nil end
+    offset = offset + acls_offset
+    if offset + 4 > remain then return -1, nil end
+    local flags = buf(offset, 4)
+    offset = offset + 4
+    if offset + 8 > remain then return -1, nil end
+    local ttl = buf(offset, 8)
+    offset = offset + 8
+
+    return offset, {
+        path=path,
+        data=data,
+        acls=acls,
+        flags=flags,
+        ttl=ttl,
+    }
+end
+
+local function reprCreateTTLRequest(create_ttl_req, tree)
+    tree:add(f_path, create_ttl_req.path)
+    tree:add(f_data, create_ttl_req.data)
+    reprAclsArray(create_ttl_req.acls, tree)
+    local t_flags = tree:add(f_flags, create_ttl_req.flags)
+    local ephemeral = (bit.band(create_ttl_req.flags:uint(), 0x1) == 1)
+    local sequence = (bit.band(create_ttl_req.flags:uint(), 0x2) == 2)
+    local container = (bit.band(create_ttl_req.flags:uint(), 0x4) == 4)
+    t_flags:add(f_ephemeral, ephemeral)
+    t_flags:add(f_sequence, sequence)
+    t_flags:add(f_container, container)
+    tree:add(f_ttl, create_ttl_req.ttl)
+end
+
+local function dissectCreateTTLRequest(buf, pkt, tree, _state)
+    local offset, create_ttl_req = parseCreateTTLRequest(buf)
+    if offset == -1 then return false end
+    reprCreateTTLRequest(create_ttl_req, tree)
+    return DissRes.Client
+end
+
+local parseCreateTTLReply = parseCreate2Reply
+
+local reprCreateTTLReply = reprCreate2Reply
+
+local function dissectCreateTTLReply(buf, pkt, tree, _state)
+    local offset, create_ttl_rep = parseCreateTTLReply(buf)
+    if offset == -1 then return false end
+    reprCreateTTLReply(create_ttl_rep, tree)
+    return DissRes.Server
+end
+
+
 ------------------------------------------------------------------------------
 -- MULTI packets
 
@@ -1059,18 +1151,8 @@ local parseReqOpCode = {
     [12] = parseGetChildrenRequest,
     [13] = parseCheckRequest,
     [15] = parseCreate2Request,
-}
-
-local reprReqOpCode = {
-    [1] = reprCreateRequest,
-    [2] = reprDeleteRequest,
-    [3] = reprExistsRequest,
-    [4] = reprGetDataRequest,
-    [5] = reprSetDataRequest,
-    [6] = reprGetAclRequest,
-    [7] = reprSetAclRequest,
-    [8] = reprGetChildrenRequest,
-    [12] = reprGetChildrenRequest,
+    [19] = parseCreateContainerRequest,
+    [21] = parseCreateTTLRequest,
 }
 
 local parseRepOpCode = {
@@ -1086,6 +1168,8 @@ local parseRepOpCode = {
     [12] = parseGetChildren2Reply,
     [13] = parseCheckReply,
     [15] = parseCreate2Reply,
+    [19] = parseCreateContainerReply,
+    [21] = parseCreateTTLReply,
 }
 
 local reprReqOpCode = {
@@ -1101,6 +1185,8 @@ local reprReqOpCode = {
     -- [12] = reprGetChildrenRequest,
     [13] = reprCheckRequest,
     [15] = reprCreate2Request,
+    [19] = reprCreateContainerRequest,
+    [21] = reprCreateTTLRequest,
 }
 
 local reprRepOpCode = {
@@ -1116,6 +1202,8 @@ local reprRepOpCode = {
     -- [12] = reprGetChildren2Reply,
     [13] = reprCheckReply,
     [15] = reprCreate2Reply,
+    [19] = reprCreateContainerReply,
+    [21] = reprCreateTTLReply,
 }
 
 local function parseMultiRequest(buf)
@@ -1257,6 +1345,8 @@ local dissectReqOpCode = {
     [14] = dissectMultiRequest,
     [15] = dissectCreate2Request,
     [16] = dissectReconfigRequest,
+    [19] = dissectCreateContainerRequest,
+    [21] = dissectCreateTTLRequest,
 }
 
 local dissectRepOpCode = {
@@ -1275,6 +1365,8 @@ local dissectRepOpCode = {
     [14] = dissectMultiReply,
     [15] = dissectCreate2Reply,
     [16] = dissectReconfigReply,
+    [19] = dissectCreateContainerReply,
+    [21] = dissectCreateTTLReply,
 }
 
 local function dispatchOpCodeDissector(buf, pkt, tree, state, opCode)
@@ -1768,13 +1860,13 @@ ZabProto.fields = {
     f_pkt, f_op, -- Structural fields
     f_4lw, f_len, f_xid, f_data, f_opCode, f_path, f_watch, f_protoversion,
     f_zxid, f_zxid_epoch, f_zxid_count, f_timeout, f_session, f_authtype,
-    f_perms, f_scheme, f_credential, f_datalength, f_ephemeral, f_sequence,
-    f_joining, f_leaving, f_newmembers, f_config_id, f_done, f_err,
-    f_version, f_eventtype, f_state, f_passwd, f_readonly, f_count, f_child,
-    f_czxid, f_czxid_epoch, f_czxid_count, f_mzxid, f_mzxid_epoch,
-    f_mzxid_count, f_ctime, f_mtime, f_cversion, f_aversion,
-    f_ephemeralowner, f_numchildren, f_pzxid,
-    f_pzxid_epoch, f_pzxid_count
+    f_perms, f_scheme, f_credential, f_datalength, f_flags, f_ephemeral,
+    f_sequence, f_container, f_ttl, f_joining, f_leaving, f_newmembers,
+    f_config_id, f_done, f_err, f_version, f_eventtype, f_state, f_passwd,
+    f_readonly, f_count, f_child, f_czxid, f_czxid_epoch, f_czxid_count,
+    f_mzxid, f_mzxid_epoch, f_mzxid_count, f_ctime, f_mtime, f_cversion,
+    f_aversion, f_ephemeralowner, f_numchildren, f_pzxid, f_pzxid_epoch,
+    f_pzxid_count
 }
 
 function ZabProto.dissector(buf, pkt, root)
