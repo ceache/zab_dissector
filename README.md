@@ -1,7 +1,7 @@
 Zookeeper Client Packets Wireshark Dissector
 ============================================
 
-Should works as of Wireshark v2.0.2.
+Should works as of Wireshark v4.6.2.
 
 This is a LUA dissector for the ZAB protocol used by Zookeeper.
 

@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 -- zab.lua
 --
--- Works as of Wireshark v2.0.2
+-- Works as of Wireshark v4.6.2
 -- This is a Lua dissector for ZAB 1.0 validation.
 -- Only the messages exchanged between the client and the server are supported.
 --
@@ -2002,10 +2002,7 @@ if args and #args > 0 then
             else
                 error("invalid commandline argument value")
             end
-        else
-            error("invalid commandline argument syntax")
+            default_settings[name] = value
         end
-
-        default_settings[name] = value
     end
 end
