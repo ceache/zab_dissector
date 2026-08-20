@@ -1,0 +1,34 @@
+=== Packet 1 ===
+zab.length	78
+zab.opcode	6
+zab.path	/test_client.py::TestClient::test_create_acl_empty_list-caf85fff/1
+zab.xid	5
+
+=== Packet 2 ===
+zab.aversion	0
+zab.credential	anyone
+zab.ctime	1787186948652
+zab.cversion	0
+zab.czxid	0x000000010000014a
+zab.czxid.count	330
+zab.czxid.epoch	1
+zab.datalength	0
+zab.ephemeralowner	0x0000000000000000
+zab.err	0
+zab.length	111
+zab.mtime	1787186948652
+zab.mzxid	0x000000010000014a
+zab.mzxid.count	330
+zab.mzxid.epoch	1
+zab.numchildren	0
+zab.opcode	6
+zab.permissions	31
+zab.pzxid	0x000000010000014a
+zab.pzxid.count	330
+zab.pzxid.epoch	1
+zab.scheme	world
+zab.version	0
+zab.xid	5
+zab.zxid	0x000000010000014a
+zab.zxid.count	330
+zab.zxid.epoch	1

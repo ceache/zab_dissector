@@ -1,0 +1,15 @@
+=== Packet 1 ===
+zab.length	59
+zab.opcode	9
+zab.path	/test_client.py::TestClient::test_sync-059d3d6e
+zab.xid	4
+
+=== Packet 2 ===
+zab.err	0
+zab.length	67
+zab.opcode	9
+zab.path	/test_client.py::TestClient::test_sync-059d3d6e
+zab.xid	4
+zab.zxid	0x00000001000001a7
+zab.zxid.count	423
+zab.zxid.epoch	1

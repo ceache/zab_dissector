@@ -1,0 +1,11 @@
+{
+  "opcode": "SET_AUTH",
+  "opcode_id": 100,
+  "instances": [
+    {
+      "description": "Extracted set_auth request and response from capture",
+      "file": "instance_1.pcapng",
+      "enabled": true
+    }
+  ]
+}

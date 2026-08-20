@@ -1,20 +1,11 @@
 === Packet 1 ===
-zab.length	45
-zab.passwd	00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
-zab.protocolversion	0
-zab.readonly	0
-zab.session	0x0000000000000000
-zab.timeout	10000
-zab.zxid	0x0000000000000000
-
-=== Packet 2 ===
 zab.length	14
 zab.opcode	3
 zab.path	/
 zab.watch	0
 zab.xid	2
 
-=== Packet 3 ===
+=== Packet 2 ===
 zab.aversion	0
 zab.ctime	0
 zab.cversion	0

@@ -1,0 +1,34 @@
+=== Packet 1 ===
+zab.length	71
+zab.opcode	12
+zab.path	/test_client.py::TestClient::test_get_children2-49bf04ad/a
+zab.watch	0
+zab.xid	9
+
+=== Packet 2 ===
+zab.aversion	0
+zab.child	b
+zab.count	1
+zab.ctime	1787186962792
+zab.cversion	1
+zab.czxid	0x0000000100000208
+zab.czxid.count	520
+zab.czxid.epoch	1
+zab.datalength	0
+zab.ephemeralowner	0x0000000000000000
+zab.err	0
+zab.length	93
+zab.mtime	1787186962792
+zab.mzxid	0x0000000100000208
+zab.mzxid.count	520
+zab.mzxid.epoch	1
+zab.numchildren	1
+zab.opcode	12
+zab.pzxid	0x0000000100000209
+zab.pzxid.count	521
+zab.pzxid.epoch	1
+zab.version	0
+zab.xid	9
+zab.zxid	0x0000000100000209
+zab.zxid.count	521
+zab.zxid.epoch	1

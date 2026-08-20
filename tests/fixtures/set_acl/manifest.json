@@ -1,0 +1,11 @@
+{
+  "opcode": "SET_ACL",
+  "opcode_id": 7,
+  "instances": [
+    {
+      "description": "Extracted set_acl request and response from capture",
+      "file": "instance_1.pcapng",
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "opcode": "CREATE2",
+  "opcode_id": 15,
+  "instances": [
+    {
+      "description": "Extracted create2 request and response from capture",
+      "file": "instance_1.pcapng",
+      "enabled": true
+    }
+  ]
+}
