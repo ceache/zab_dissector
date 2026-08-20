@@ -20,6 +20,19 @@ $ tshark  \
     -VOzab  -Yzab -x | view -
 ```
 
+A client may talk to many servers on different ports. Use the `ports=` argument
+to register several ports at once (this is useful for cluster scenarios):
+
+``` shell
+$ tshark \
+    -X lua_script:zab.lua \
+    -X lua_script1:ports=2181,2182,20000 \
+    -r <capture file> -Yzab
+```
+
+`port=N` always sets a single port (and is equivalent to `ports=N`), so the
+single-port form remains fully backward compatible.
+
 For the Wireshark GUI
 
 Windows:
@@ -58,5 +71,24 @@ I also recommend setting some high buffer to avoid any packet drops by BPF.
     -s 0 -B 919400 \
     -w <path to capture file> \
     tcp port 2181
+```
+
+Code quality tooling
+--------------------
+
+The project ships two portable shell runners for Lua code quality. Both exit
+with status `0` on clean code and `1` when issues are found.
+
+``` shell
+$ ./scripts/lint.sh        # run luacheck against zab.lua
+$ ./scripts/format.sh      # format zab.lua in place (stylua)
+$ ./scripts/format.sh --check  # verify zab.lua is formatted (no changes)
+```
+
+Install the underlying tools if they are missing:
+
+``` shell
+$ luarocks install luacheck   # Lua linter
+$ brew install stylua         # or: cargo install stylua
 ```
 

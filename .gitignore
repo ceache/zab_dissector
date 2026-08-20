@@ -39,3 +39,8 @@ luac.out
 *.x86_64
 *.hex
 
+# Speckit workflow tooling (not part of the shipped project)
+.specify/
+specs/
+.opencode/
+
