@@ -1,0 +1,11 @@
+{
+  "port": 2181,
+  "description": "ZAB Set_data opcode test fixtures",
+  "instances": [
+    {
+      "file": "instance_1.pcapng",
+      "description": "ZAB SetData (Success err=0)",
+      "enabled": true
+    }
+  ]
+}

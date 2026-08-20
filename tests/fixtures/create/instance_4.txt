@@ -1,0 +1,23 @@
+=== Packet 1 ===
+zab.length	45
+zab.passwd	00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+zab.protocolversion	0
+zab.readonly	0
+zab.session	0x0000000000000000
+zab.timeout	10000
+zab.zxid	0x0000000000000000
+
+=== Packet 2 ===
+zab.err	-108
+zab.length	16
+zab.xid	7
+zab.zxid	0x000000010000003e
+zab.zxid.count	62
+zab.zxid.epoch	1
+
+=== Packet 3 ===
+zab.length	148
+zab.opcode	2
+zab.path	/test_barrier.py::TestKazooDoubleBarrierTests::test_barrier_existing_parent_node-0bcbd817/some/path/4c26caf5d4e14ccea1272b56b84bfdc8
+zab.version	4294967295
+zab.xid	8

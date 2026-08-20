@@ -1,0 +1,11 @@
+{
+  "port": 2181,
+  "description": "ZAB Ping opcode test fixtures",
+  "instances": [
+    {
+      "file": "instance_1.pcapng",
+      "description": "ZAB Ping (Success err=0)",
+      "enabled": true
+    }
+  ]
+}

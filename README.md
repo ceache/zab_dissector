@@ -58,19 +58,56 @@ and select the ZAB protocol.
 
 With the `tshark` CLI, you'll need to use the `-X lua_script1:port` as above.
 
+Automated Unit Testing
+----------------------
 
-Capturing traffic
------------------
+Automated unit tests are organized into granular per-opcode request/response type directories under `tests/fixtures/` (e.g. `connect`, `create`, `delete`, `exists`, `get_data`, `set_data`, `ping`, `reconfig`).
 
-Make sure you capture *full* streams or the decode will fail.
-I also recommend setting some high buffer to avoid any packet drops by BPF.
+No manual `tshark` installation is required if you have Nix installed.
+
+### 1. Running All Opcode Unit Tests
 
 ``` shell
-  $ tcpdump \
-    -p -i lo \
-    -s 0 -B 919400 \
-    -w <path to capture file> \
-    tcp port 2181
+$ nix run .#tests
+```
+
+Or directly using Python:
+
+``` shell
+$ python3 tests/run_tests.py
+```
+
+Or running Nix flake checks:
+
+``` shell
+$ nix flake check
+```
+
+### 2. Running Focused Tests for a Specific Opcode
+
+Filter test execution to a single opcode type (e.g. `create` or `exists`):
+
+``` shell
+$ python3 tests/run_tests.py --type create
+```
+
+### 3. Extracting New Packet Fixtures from `kazoo-capture-runs/`
+
+To extract specific ZAB opcode packet frames from `kazoo-capture-runs/` captures into target fixture files:
+
+``` shell
+$ python3 tests/run_tests.py extract \
+    --input kazoo-capture-runs/plain-3.9.5-capture/captures/kazoo-client-zoo1-1787186909.pcapng \
+    --out tests/fixtures/create/instance_1.pcapng \
+    --range 7-8
+```
+
+### 4. Updating Baseline Outputs
+
+To generate or update baseline text files for newly added packet instances:
+
+``` shell
+$ python3 tests/run_tests.py --update
 ```
 
 Code quality tooling

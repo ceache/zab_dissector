@@ -1,0 +1,16 @@
+=== Packet 1 ===
+zab.length	45
+zab.passwd	00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+zab.protocolversion	0
+zab.readonly	0
+zab.session	0x0000000000000000
+zab.timeout	10000
+zab.zxid	0x0000000000000000
+
+=== Packet 2 ===
+zab.length	37
+zab.passwd	15:36:f4:2b:7e:16:83:fd:7b:93:2e:5f:f7:95:5b:94
+zab.protocolversion	0
+zab.readonly	0
+zab.session	0x0100000406d10000
+zab.timeout	10000

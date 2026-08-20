@@ -1,0 +1,26 @@
+{
+  "port": 2181,
+  "description": "ZAB Create opcode test fixtures",
+  "instances": [
+    {
+      "file": "instance_1.pcapng",
+      "description": "ZAB Create node (Success err=0)",
+      "enabled": true
+    },
+    {
+      "file": "instance_2.pcapng",
+      "description": "ZAB Create node variation (Success err=0)",
+      "enabled": true
+    },
+    {
+      "file": "instance_3.pcapng",
+      "description": "ZAB Create node (Error NodeExistsError err=-110)",
+      "enabled": true
+    },
+    {
+      "file": "instance_4.pcapng",
+      "description": "ZAB Create node (Error NoChildrenForEphemeralsError err=-108)",
+      "enabled": true
+    }
+  ]
+}

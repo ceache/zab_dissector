@@ -1,0 +1,16 @@
+{
+  "port": 2181,
+  "description": "ZAB Delete opcode test fixtures",
+  "instances": [
+    {
+      "file": "instance_1.pcapng",
+      "description": "ZAB Delete node (Success err=0)",
+      "enabled": true
+    },
+    {
+      "file": "instance_2.pcapng",
+      "description": "ZAB Delete node (Error NoNodeError err=-101)",
+      "enabled": true
+    }
+  ]
+}

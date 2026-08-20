@@ -1,0 +1,30 @@
+=== Packet 1 ===
+zab.length	45
+zab.passwd	00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+zab.protocolversion	0
+zab.readonly	0
+zab.session	0x0000000000000000
+zab.timeout	10000
+zab.zxid	0x0000000000000000
+
+=== Packet 2 ===
+zab.done	0
+zab.err	-1
+zab.length	106
+zab.opcode	14
+zab.opcode	2
+zab.path	/test_client.py::TestClientTransactions::test_basic_delete-8ada3142/fred
+zab.version	4294967295
+zab.xid	5
+
+=== Packet 3 ===
+zab.done	0
+zab.err	0
+zab.err	0
+zab.length	34
+zab.opcode	14
+zab.opcode	2
+zab.xid	5
+zab.zxid	0x0000000100000236
+zab.zxid.count	566
+zab.zxid.epoch	1

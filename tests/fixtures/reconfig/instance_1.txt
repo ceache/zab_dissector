@@ -1,0 +1,49 @@
+=== Packet 1 ===
+zab.length	45
+zab.passwd	00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+zab.protocolversion	0
+zab.readonly	0
+zab.session	0x0000000000000000
+zab.timeout	10000
+zab.zxid	0x0000000000000000
+
+=== Packet 2 ===
+zab.container	0
+zab.credential	anyone
+zab.data	62:79:74:65:73
+zab.ephemeral	0
+zab.flags	0x00000000
+zab.length	108
+zab.opcode	15
+zab.path	/test_client.py::TestClient::test_create_stat-fde1be85/1
+zab.permissions	31
+zab.scheme	world
+zab.sequence	0
+zab.xid	4
+
+=== Packet 3 ===
+zab.aversion	0
+zab.ctime	1787188114745
+zab.cversion	0
+zab.czxid	0x0000000100000194
+zab.czxid.count	404
+zab.czxid.epoch	1
+zab.datalength	5
+zab.ephemeralowner	0x0000000000000000
+zab.err	0
+zab.length	144
+zab.mtime	1787188114745
+zab.mzxid	0x0000000100000194
+zab.mzxid.count	404
+zab.mzxid.epoch	1
+zab.numchildren	0
+zab.opcode	15
+zab.path	/test_client.py::TestClient::test_create_stat-fde1be85/1
+zab.pzxid	0x0000000100000194
+zab.pzxid.count	404
+zab.pzxid.epoch	1
+zab.version	0
+zab.xid	4
+zab.zxid	0x0000000100000194
+zab.zxid.count	404
+zab.zxid.epoch	1

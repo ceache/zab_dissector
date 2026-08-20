@@ -1,0 +1,16 @@
+{
+  "port": 2181,
+  "description": "ZAB Multi opcode test fixtures",
+  "instances": [
+    {
+      "file": "instance_1.pcapng",
+      "description": "ZAB Multi transaction (Sub-op Error SystemError err=-1)",
+      "enabled": true
+    },
+    {
+      "file": "instance_2.pcapng",
+      "description": "ZAB Multi transaction (Success err=0)",
+      "enabled": true
+    }
+  ]
+}
