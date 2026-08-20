@@ -1,0 +1,35 @@
+=== Packet 1 ===
+zab.credential	user:smGaoVKd/cQkjm7b88GyorAUz20=
+zab.length	124
+zab.opcode	7
+zab.path	/test_client.py::TestClient::test_set_acls-d326d9e0/a
+zab.permissions	31
+zab.scheme	digest
+zab.version	4294967295
+zab.xid	5
+
+=== Packet 2 ===
+zab.aversion	1
+zab.ctime	1787186958081
+zab.cversion	0
+zab.czxid	0x00000001000001c7
+zab.czxid.count	455
+zab.czxid.epoch	1
+zab.datalength	0
+zab.ephemeralowner	0x0000000000000000
+zab.err	0
+zab.length	84
+zab.mtime	1787186958081
+zab.mzxid	0x00000001000001c7
+zab.mzxid.count	455
+zab.mzxid.epoch	1
+zab.numchildren	0
+zab.opcode	7
+zab.pzxid	0x00000001000001c7
+zab.pzxid.count	455
+zab.pzxid.epoch	1
+zab.version	0
+zab.xid	5
+zab.zxid	0x00000001000001c8
+zab.zxid.count	456
+zab.zxid.epoch	1

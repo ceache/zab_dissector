@@ -1,0 +1,11 @@
+{
+  "opcode": "SYNC",
+  "opcode_id": 9,
+  "instances": [
+    {
+      "description": "Extracted sync request and response from capture",
+      "file": "instance_1.pcapng",
+      "enabled": true
+    }
+  ]
+}

@@ -67,12 +67,22 @@ local opCodes = {
     [14] = "MULTI",
     [15] = "CREATE2",
     [16] = "RECONFIG",
+    [17] = "CHECKWATCHES",
+    [18] = "REMOVEWATCHES",
     [19] = "CREATE_CONTAINER",
+    [20] = "DELETE_CONTAINER",
     [21] = "CREATE_TTL",
+    [22] = "MULTIREAD",
     [-10] = "CREATESESSION",
     [-11] = "CLOSE",
     [100] = "SETAUTH",
     [101] = "SETWATCHES",
+    [102] = "SASL",
+    [103] = "GETEPHEMERALS",
+    [104] = "GETALLCHILDRENNUMBER",
+    [105] = "SETWATCHES2",
+    [106] = "ADDWATCH",
+    [107] = "WHOAMI",
 }
 
 local watchEventTypes = {
@@ -110,60 +120,62 @@ local errorCodes = {
     [-119] = "ConnectionClosedError",
 }
 
-local f_pkt = ProtoField.none("zab.pkt", "Packet")
-local f_op = ProtoField.none("zab.op", "Operation")
+local f = {}
+f.pkt = ProtoField.none("zab.pkt", "Packet")
+f.op = ProtoField.none("zab.op", "Operation")
 
-local f_4lw = ProtoField.string("zab.4lw", "4LW message")
-local f_protoversion = ProtoField.uint64("zab.protocolversion", "Protocol Version")
-local f_zxid = ProtoField.uint64("zab.zxid", "ZxID", base.HEX)
-local f_zxid_epoch = ProtoField.uint32("zab.zxid.epoch", "Epoch")
-local f_zxid_count = ProtoField.uint32("zab.zxid.count", "Count")
-local f_czxid = ProtoField.uint64("zab.czxid", "Created ZxID", base.HEX)
-local f_czxid_epoch = ProtoField.uint32("zab.czxid.epoch", "Epoch")
-local f_czxid_count = ProtoField.uint32("zab.czxid.count", "Count")
-local f_mzxid = ProtoField.uint64("zab.mzxid", "Last Modified ZxID", base.HEX)
-local f_mzxid_epoch = ProtoField.uint32("zab.mzxid.epoch", "Epoch")
-local f_mzxid_count = ProtoField.uint32("zab.mzxid.count", "Count")
-local f_pzxid = ProtoField.uint64("zab.pzxid", "Last Modified Children ZxID", base.HEX)
-local f_pzxid_epoch = ProtoField.uint32("zab.pzxid.epoch", "Epoch")
-local f_pzxid_count = ProtoField.uint32("zab.pzxid.count", "Count")
-local f_timeout = ProtoField.uint32("zab.timeout", "Timeout")
-local f_session = ProtoField.uint64("zab.session", "Session ID", base.HEX)
-local f_len = ProtoField.uint32("zab.length", "Length", base.INT)
-local f_passwd = ProtoField.bytes("zab.passwd", "Password")
-local f_xid = ProtoField.int32("zab.xid", "Transaction ID", base.INT)
-local f_opCode = ProtoField.int32("zab.opcode", "OpCode", base.INT, opCodes)
-local f_data = ProtoField.bytes("zab.data", "Data")
-local f_path = ProtoField.string("zab.path", "Path")
-local f_watch = ProtoField.bool("zab.watch", "Watch")
-local f_ctime = ProtoField.uint64("zab.ctime", "Created", base.RELATIVE_TIME)
-local f_mtime = ProtoField.uint64("zab.mtime", "Last Modified", base.RELATIVE_TIME)
-local f_ephemeralowner = ProtoField.uint64("zab.ephemeralowner", "Ephemeral Owner", base.HEX)
-local f_numchildren = ProtoField.uint64("zab.numchildren", "Number of Children")
-local f_datalength = ProtoField.uint64("zab.datalength", "Data Length")
-local f_done = ProtoField.bool("zab.done", "Done")
-local f_err = ProtoField.int32("zab.err", "Error", base.INT, errorCodes)
-local f_perms = ProtoField.int64("zab.permissions", "Permissions")
-local f_authtype = ProtoField.int32("zab.authtype", "Authentication Type")
-local f_scheme = ProtoField.string("zab.scheme", "Scheme")
-local f_credential = ProtoField.string("zab.credential", "Credentials")
-local f_flags = ProtoField.uint32("zab.flags", "Flags", base.HEX)
-local f_ephemeral = ProtoField.bool("zab.ephemeral", "Ephemeral")
-local f_sequence = ProtoField.bool("zab.sequence", "Sequence")
-local f_container = ProtoField.bool("zab.container", "Container")
-local f_ttl = ProtoField.uint64("zab.ttl", "TTL")
-local f_joining = ProtoField.string("zab.joining", "Joining")
-local f_leaving = ProtoField.string("zab.leaving", "Leaving")
-local f_newmembers = ProtoField.string("zab.newmembers", "New Members")
-local f_config_id = ProtoField.uint64("zab.config_id", "Config ID", base.HEX)
-local f_version = ProtoField.uint64("zab.version", "Version")
-local f_cversion = ProtoField.uint64("zab.cversion", "Child Version")
-local f_aversion = ProtoField.uint64("zab.aversion", "ACL Version")
-local f_readonly = ProtoField.bool("zab.readonly", "Readonly")
-local f_eventtype = ProtoField.uint32("zab.eventtype", "Event Type", base.INT, watchEventTypes)
-local f_count = ProtoField.uint32("zab.count", "Count")
-local f_state = ProtoField.uint32("zab.state", "State")
-local f_child = ProtoField.string("zab.child", "Child")
+f["4lw"] = ProtoField.string("zab.4lw", "4LW message")
+f.protoversion = ProtoField.uint64("zab.protocolversion", "Protocol Version")
+f.zxid = ProtoField.uint64("zab.zxid", "ZxID", base.HEX)
+f.zxid_epoch = ProtoField.uint32("zab.zxid.epoch", "Epoch")
+f.zxid_count = ProtoField.uint32("zab.zxid.count", "Count")
+f.czxid = ProtoField.uint64("zab.czxid", "Created ZxID", base.HEX)
+f.czxid_epoch = ProtoField.uint32("zab.czxid.epoch", "Epoch")
+f.czxid_count = ProtoField.uint32("zab.czxid.count", "Count")
+f.mzxid = ProtoField.uint64("zab.mzxid", "Last Modified ZxID", base.HEX)
+f.mzxid_epoch = ProtoField.uint32("zab.mzxid.epoch", "Epoch")
+f.mzxid_count = ProtoField.uint32("zab.mzxid.count", "Count")
+f.pzxid = ProtoField.uint64("zab.pzxid", "Last Modified Children ZxID", base.HEX)
+f.pzxid_epoch = ProtoField.uint32("zab.pzxid.epoch", "Epoch")
+f.pzxid_count = ProtoField.uint32("zab.pzxid.count", "Count")
+f.timeout = ProtoField.uint32("zab.timeout", "Timeout")
+f.session = ProtoField.uint64("zab.session", "Session ID", base.HEX)
+f.len = ProtoField.uint32("zab.length", "Length", base.INT)
+f.passwd = ProtoField.bytes("zab.passwd", "Password")
+f.xid = ProtoField.int32("zab.xid", "Transaction ID", base.INT)
+f.opCode = ProtoField.int32("zab.opcode", "OpCode", base.INT, opCodes)
+f.data = ProtoField.bytes("zab.data", "Data")
+f.path = ProtoField.string("zab.path", "Path")
+f.watch = ProtoField.bool("zab.watch", "Watch")
+f.ctime = ProtoField.uint64("zab.ctime", "Created", base.RELATIVE_TIME)
+f.mtime = ProtoField.uint64("zab.mtime", "Last Modified", base.RELATIVE_TIME)
+f.ephemeralowner = ProtoField.uint64("zab.ephemeralowner", "Ephemeral Owner", base.HEX)
+f.numchildren = ProtoField.uint64("zab.numchildren", "Number of Children")
+f.datalength = ProtoField.uint64("zab.datalength", "Data Length")
+f.done = ProtoField.bool("zab.done", "Done")
+f.err = ProtoField.int32("zab.err", "Error", base.INT, errorCodes)
+f.perms = ProtoField.int64("zab.permissions", "Permissions")
+f.authtype = ProtoField.int32("zab.authtype", "Authentication Type")
+f.scheme = ProtoField.string("zab.scheme", "Scheme")
+f.credential = ProtoField.string("zab.credential", "Credentials")
+f.flags = ProtoField.uint32("zab.flags", "Flags", base.HEX)
+f.ephemeral = ProtoField.bool("zab.ephemeral", "Ephemeral")
+f.sequence = ProtoField.bool("zab.sequence", "Sequence")
+f.container = ProtoField.bool("zab.container", "Container")
+f.ttl = ProtoField.uint64("zab.ttl", "TTL")
+f.joining = ProtoField.string("zab.joining", "Joining")
+f.leaving = ProtoField.string("zab.leaving", "Leaving")
+f.newmembers = ProtoField.string("zab.newmembers", "New Members")
+f.config_id = ProtoField.uint64("zab.config_id", "Config ID", base.HEX)
+f.version = ProtoField.uint64("zab.version", "Version")
+f.cversion = ProtoField.uint64("zab.cversion", "Child Version")
+f.aversion = ProtoField.uint64("zab.aversion", "ACL Version")
+f.readonly = ProtoField.bool("zab.readonly", "Readonly")
+f.eventtype = ProtoField.uint32("zab.eventtype", "Event Type", base.INT, watchEventTypes)
+f.count = ProtoField.uint32("zab.count", "Count")
+f.state = ProtoField.uint32("zab.state", "State")
+f.child = ProtoField.string("zab.child", "Child")
+f.mode = ProtoField.int32("zab.mode", "Mode", base.INT)
 
 local CLIENTS = {}
 
@@ -182,7 +194,7 @@ local DissRes = {
 local function defaultDissect(buf, pkt, tree, _offset, _stat)
     tree:append_text(" [NO IMPL]")
     if buf:len() > 0 then
-        tree:add(f_data, buf)
+        tree:add(f.data, buf)
     end
     return true
 end
@@ -253,23 +265,23 @@ local function parseStat(buf)
 end
 
 local function reprStat(stat, tree)
-    local t_czxid = tree:add(f_czxid, stat.czxid)
-    t_czxid:add(f_czxid_epoch, stat.czxid(0, 4))
-    t_czxid:add(f_czxid_count, stat.czxid(4, 4))
-    local t_mzxid = tree:add(f_mzxid, stat.mzxid)
-    t_mzxid:add(f_mzxid_epoch, stat.mzxid(0, 4))
-    t_mzxid:add(f_mzxid_count, stat.mzxid(4, 4))
-    tree:add(f_ctime, stat.ctime)
-    tree:add(f_mtime, stat.mtime)
-    tree:add(f_version, stat.version)
-    tree:add(f_cversion, stat.cversion)
-    tree:add(f_aversion, stat.aversion)
-    tree:add(f_ephemeralowner, stat.ephemeralowner)
-    tree:add(f_datalength, stat.datalength)
-    tree:add(f_numchildren, stat.numchildren)
-    local t_pzxid = tree:add(f_pzxid, stat.pzxid)
-    t_pzxid:add(f_pzxid_epoch, stat.pzxid(0, 4))
-    t_pzxid:add(f_pzxid_count, stat.pzxid(4, 4))
+    local t_czxid = tree:add(f.czxid, stat.czxid)
+    t_czxid:add(f.czxid_epoch, stat.czxid(0, 4))
+    t_czxid:add(f.czxid_count, stat.czxid(4, 4))
+    local t_mzxid = tree:add(f.mzxid, stat.mzxid)
+    t_mzxid:add(f.mzxid_epoch, stat.mzxid(0, 4))
+    t_mzxid:add(f.mzxid_count, stat.mzxid(4, 4))
+    tree:add(f.ctime, stat.ctime)
+    tree:add(f.mtime, stat.mtime)
+    tree:add(f.version, stat.version)
+    tree:add(f.cversion, stat.cversion)
+    tree:add(f.aversion, stat.aversion)
+    tree:add(f.ephemeralowner, stat.ephemeralowner)
+    tree:add(f.datalength, stat.datalength)
+    tree:add(f.numchildren, stat.numchildren)
+    local t_pzxid = tree:add(f.pzxid, stat.pzxid)
+    t_pzxid:add(f.pzxid_epoch, stat.pzxid(0, 4))
+    t_pzxid:add(f.pzxid_count, stat.pzxid(4, 4))
 end
 
 -- Reads a string, returns length,str or 0,nil
@@ -322,9 +334,9 @@ local function parseAcl(buf)
 end
 
 local function reprAcl(acl, tree)
-    tree:add(f_perms, acl.perms)
-    tree:add(f_scheme, acl.scheme)
-    tree:add(f_credential, acl.credential)
+    tree:add(f.perms, acl.perms)
+    tree:add(f.scheme, acl.scheme)
+    tree:add(f.credential, acl.credential)
 end
 
 local function parseAclsArray(buf)
@@ -378,10 +390,10 @@ local function parseResult(buf)
 end
 
 local function reprResult(result, tree)
-    local t_zxid = tree:add(f_zxid, result.zxid)
-    t_zxid:add(f_zxid_epoch, result.zxid(0, 4))
-    t_zxid:add(f_zxid_count, result.zxid(4, 4))
-    tree:add(f_err, result.err)
+    local t_zxid = tree:add(f.zxid, result.zxid)
+    t_zxid:add(f.zxid_epoch, result.zxid(0, 4))
+    t_zxid:add(f.zxid_count, result.zxid(4, 4))
+    tree:add(f.err, result.err)
 end
 
 ------------------------------------------------------------------------------
@@ -409,8 +421,8 @@ local function parseCheckRequest(buf)
 end
 
 local function reprCheckRequest(check_req, tree)
-    tree:add(f_path, check_req.path)
-    tree:add(f_version, check_req.version)
+    tree:add(f.path, check_req.path)
+    tree:add(f.version, check_req.version)
 end
 
 local function dissectCheckRequest(buf, pkt, tree, _state)
@@ -465,8 +477,8 @@ local function dissectGetChildrenRequest(buf, pkt, tree, _state)
     if offset == -1 then
         return false
     end
-    tree:add(f_path, getchildren_req.path)
-    tree:add(f_watch, getchildren_req.watch)
+    tree:add(f.path, getchildren_req.path)
+    tree:add(f.watch, getchildren_req.watch)
     return DissRes.Client
 end
 
@@ -475,8 +487,8 @@ local function dissectGetChildren2Request(buf, pkt, tree, _state)
     if offset == -1 then
         return false
     end
-    tree:add(f_path, getchildren_req.path)
-    tree:add(f_watch, getchildren_req.watch)
+    tree:add(f.path, getchildren_req.path)
+    tree:add(f.watch, getchildren_req.watch)
     return DissRes.Client
 end
 
@@ -511,9 +523,9 @@ local function dissectGetChildrenReply(buf, pkt, tree, _state)
         return false
     end
 
-    tree:add(f_count, getchildren_rep.count)
+    tree:add(f.count, getchildren_rep.count)
     for i, child in ipairs(getchildren_rep.children) do
-        tree:add(f_child, child)
+        tree:add(f.child, child)
     end
     return DissRes.Server
 end
@@ -555,9 +567,9 @@ local function dissectGetChildren2Reply(buf, pkt, tree, _state)
         return false
     end
 
-    tree:add(f_count, getchildren2_rep.count)
+    tree:add(f.count, getchildren2_rep.count)
     for i, child in ipairs(getchildren2_rep.children) do
-        tree:add(f_child, child)
+        tree:add(f.child, child)
     end
     reprStat(getchildren2_rep.stat, tree)
     return DissRes.Server
@@ -598,9 +610,9 @@ local function dissectSetAclRequest(buf, pkt, tree, _state)
     if offset == -1 then
         return false
     end
-    tree:add(f_path, setacl_req.path)
+    tree:add(f.path, setacl_req.path)
     reprAclsArray(setacl_req.acls, tree)
-    tree:add(f_version, setacl_req.version)
+    tree:add(f.version, setacl_req.version)
     return DissRes.Client
 end
 
@@ -650,7 +662,7 @@ local function dissectGetAclRequest(buf, pkt, tree, _state)
     if offset == -1 then
         return false
     end
-    tree:add(f_path, getacl_req.path)
+    tree:add(f.path, getacl_req.path)
     return DissRes.Client
 end
 
@@ -715,9 +727,9 @@ local function parseSetDataRequest(buf)
 end
 
 local function reprSetDataRequest(setdata_req, tree)
-    tree:add(f_path, setdata_req.path)
-    tree:add(f_data, setdata_req.data)
-    tree:add(f_version, setdata_req.version)
+    tree:add(f.path, setdata_req.path)
+    tree:add(f.data, setdata_req.data)
+    tree:add(f.version, setdata_req.version)
 end
 
 local function dissectSetDataRequest(buf, pkt, tree, _state)
@@ -783,8 +795,8 @@ local function dissectGetDataRequest(buf, pkt, tree, _state)
     if offset == -1 then
         return false
     end
-    tree:add(f_path, getdata_req.path)
-    tree:add(f_watch, getdata_req.watch)
+    tree:add(f.path, getdata_req.path)
+    tree:add(f.watch, getdata_req.watch)
     return DissRes.Client
 end
 
@@ -812,7 +824,7 @@ local function dissectGetDataReply(buf, pkt, tree, _state)
     if offset == -1 then
         return false
     end
-    tree:add(f_data, getdata_rep.data)
+    tree:add(f.data, getdata_rep.data)
     reprStat(getdata_rep.stat, tree)
     return DissRes.Server
 end
@@ -858,8 +870,8 @@ local function parseDeleteRequest(buf)
 end
 
 local function reprDeleteRequest(delete_req, tree)
-    tree:add(f_path, delete_req.path)
-    tree:add(f_version, delete_req.version)
+    tree:add(f.path, delete_req.path)
+    tree:add(f.version, delete_req.version)
 end
 
 local function dissectDeleteRequest(buf, pkt, tree, _state)
@@ -918,8 +930,8 @@ local function dissectExistsRequest(buf, pkt, tree, _state)
     if offset == -1 then
         return false
     end
-    tree:add(f_path, exists_req.path)
-    tree:add(f_watch, exists_req.watch)
+    tree:add(f.path, exists_req.path)
+    tree:add(f.watch, exists_req.watch)
     return DissRes.Client
 end
 
@@ -983,10 +995,10 @@ local function parseReconfigRequest(buf)
 end
 
 local function reprReconfigRequest(reconfig_req, tree)
-    tree:add(f_joining, reconfig_req.joining)
-    tree:add(f_leaving, reconfig_req.leaving)
-    tree:add(f_newmembers, reconfig_req.new_members)
-    tree:add(f_config_id, reconfig_req.config_id)
+    tree:add(f.joining, reconfig_req.joining)
+    tree:add(f.leaving, reconfig_req.leaving)
+    tree:add(f.newmembers, reconfig_req.new_members)
+    tree:add(f.config_id, reconfig_req.config_id)
 end
 
 local function dissectReconfigRequest(buf, pkt, tree, _state)
@@ -1048,7 +1060,7 @@ local function parseSyncRequest(buf)
 end
 
 local function reprSyncRequest(sync_req, tree)
-    tree:add(f_path, sync_req.path)
+    tree:add(f.path, sync_req.path)
 end
 
 local function dissectSyncRequest(buf, pkt, tree, _state)
@@ -1076,7 +1088,7 @@ local function parseSyncReply(buf)
 end
 
 local function reprSyncReply(sync_rep, tree)
-    tree:add(f_path, sync_rep.path)
+    tree:add(f.path, sync_rep.path)
 end
 
 local function dissectSyncReply(buf, pkt, tree, _state)
@@ -1125,16 +1137,16 @@ local function parseCreateRequest(buf)
 end
 
 local function reprCreateRequest(create_req, tree)
-    tree:add(f_path, create_req.path)
-    tree:add(f_data, create_req.data)
+    tree:add(f.path, create_req.path)
+    tree:add(f.data, create_req.data)
     reprAclsArray(create_req.acls, tree)
-    local t_flags = tree:add(f_flags, create_req.flags)
+    local t_flags = tree:add(f.flags, create_req.flags)
     local ephemeral = (bit.band(create_req.flags:uint(), 0x1) == 1)
     local sequence = (bit.band(create_req.flags:uint(), 0x2) == 2)
     local container = (bit.band(create_req.flags:uint(), 0x4) == 4)
-    t_flags:add(f_ephemeral, ephemeral)
-    t_flags:add(f_sequence, sequence)
-    t_flags:add(f_container, container)
+    t_flags:add(f.ephemeral, ephemeral)
+    t_flags:add(f.sequence, sequence)
+    t_flags:add(f.container, container)
 end
 
 local function dissectCreateRequest(buf, pkt, tree, _state)
@@ -1160,7 +1172,7 @@ local function parseCreateReply(buf)
 end
 
 local function reprCreateReply(create_rep, tree)
-    tree:add(f_path, create_rep.path)
+    tree:add(f.path, create_rep.path)
 end
 
 local function dissectCreateReply(buf, pkt, tree, _state)
@@ -1207,7 +1219,7 @@ local function parseCreate2Reply(buf)
 end
 
 local function reprCreate2Reply(create_rep, tree)
-    tree:add(f_path, create_rep.path)
+    tree:add(f.path, create_rep.path)
     reprStat(create_rep.stat, tree)
 end
 
@@ -1286,17 +1298,17 @@ local function parseCreateTTLRequest(buf)
 end
 
 local function reprCreateTTLRequest(create_ttl_req, tree)
-    tree:add(f_path, create_ttl_req.path)
-    tree:add(f_data, create_ttl_req.data)
+    tree:add(f.path, create_ttl_req.path)
+    tree:add(f.data, create_ttl_req.data)
     reprAclsArray(create_ttl_req.acls, tree)
-    local t_flags = tree:add(f_flags, create_ttl_req.flags)
+    local t_flags = tree:add(f.flags, create_ttl_req.flags)
     local ephemeral = (bit.band(create_ttl_req.flags:uint(), 0x1) == 1)
     local sequence = (bit.band(create_ttl_req.flags:uint(), 0x2) == 2)
     local container = (bit.band(create_ttl_req.flags:uint(), 0x4) == 4)
-    t_flags:add(f_ephemeral, ephemeral)
-    t_flags:add(f_sequence, sequence)
-    t_flags:add(f_container, container)
-    tree:add(f_ttl, create_ttl_req.ttl)
+    t_flags:add(f.ephemeral, ephemeral)
+    t_flags:add(f.sequence, sequence)
+    t_flags:add(f.container, container)
+    tree:add(f.ttl, create_ttl_req.ttl)
 end
 
 local function dissectCreateTTLRequest(buf, pkt, tree, _state)
@@ -1446,15 +1458,15 @@ local function dissectMultiRequest(buf, pkt, tree, _state)
     end
 
     for i, op in ipairs(multi_req.ops) do
-        local t_multi = tree:add(f_op)
-        t_multi:add(f_opCode, op.opcode)
-        t_multi:add(f_done, op.done)
-        t_multi:add(f_err, op.err)
+        local t_multi = tree:add(f.op)
+        t_multi:add(f.opCode, op.opcode)
+        t_multi:add(f.done, op.done)
+        t_multi:add(f.err, op.err)
         local reprFun = reprReqOpCode[op.opcode:int()]
         if reprFun ~= nil then
             reprFun(op.req_data, t_multi)
         else
-            t_multi:add(f_data, op.req_raw_data)
+            t_multi:add(f.data, op.req_raw_data)
         end
     end
 
@@ -1518,15 +1530,15 @@ local function dissectMultiReply(buf, pkt, tree, _state)
     end
 
     for i, op in ipairs(multi_rep.ops) do
-        local t_multi = tree:add(f_op, op.op_data)
-        t_multi:add(f_opCode, op.opcode)
-        t_multi:add(f_done, op.done)
-        t_multi:add(f_err, op.err)
+        local t_multi = tree:add(f.op, op.op_data)
+        t_multi:add(f.opCode, op.opcode)
+        t_multi:add(f.done, op.done)
+        t_multi:add(f.err, op.err)
         local reprFun = reprRepOpCode[op.opcode:int()]
         if reprFun ~= nil then
             reprFun(op.rep_data, t_multi)
         else
-            t_multi:add(f_data, op.rep_raw_data)
+            t_multi:add(f.data, op.rep_raw_data)
         end
     end
 
@@ -1534,226 +1546,177 @@ local function dissectMultiReply(buf, pkt, tree, _state)
 end
 
 ------------------------------------------------------------------------------
--- opCode dispatcher
-local dissectReqOpCode = {
-    [-11] = dissectCloseRequest,
-    [1] = dissectCreateRequest,
-    [2] = dissectDeleteRequest,
-    [3] = dissectExistsRequest,
-    [4] = dissectGetDataRequest,
-    [5] = dissectSetDataRequest,
-    [6] = dissectGetAclRequest,
-    [7] = dissectSetAclRequest,
-    [8] = dissectGetChildrenRequest,
-    [9] = dissectSyncRequest,
-    [12] = dissectGetChildren2Request,
-    [13] = dissectCheckRequest,
-    [14] = dissectMultiRequest,
-    [15] = dissectCreate2Request,
-    [16] = dissectReconfigRequest,
-    [19] = dissectCreateContainerRequest,
-    [21] = dissectCreateTTLRequest,
-}
+-- Extended OpCode Dissectors
 
-local dissectRepOpCode = {
-    [-11] = dissectCloseReply,
-    [1] = dissectCreateReply,
-    -- [2] = dissectDeleteReply,
-    [3] = dissectExistsReply,
-    [4] = dissectGetDataReply,
-    [5] = dissectSetDataReply,
-    [6] = dissectGetAclReply,
-    [7] = dissectSetAclReply,
-    [8] = dissectGetChildrenReply,
-    [9] = dissectSyncReply,
-    [12] = dissectGetChildren2Reply,
-    -- [13] = dissectCheckReply,
-    [14] = dissectMultiReply,
-    [15] = dissectCreate2Reply,
-    [16] = dissectReconfigReply,
-    [19] = dissectCreateContainerReply,
-    [21] = dissectCreateTTLReply,
-}
-
-local function dispatchOpCodeDissector(buf, pkt, tree, state, opCode)
-    -- Dissect a request/reply based on opCode (with a default fallback)
-    if state.dir == Direction.Client2Server then
-        return dispatch(dissectReqOpCode, opCode)(buf, pkt, tree, state)
-    elseif state.dir == Direction.Server2Client then
-        return dispatch(dissectRepOpCode, opCode)(buf, pkt, tree, state)
-    elseif state.dir == nil then
-        -- Try to parse as client packet then as server packet
-        local res = dispatch(dissectReqOpCode, opCode)(buf, pkt, tree, state)
-        if res == false then
-            res = dispatch(dissectRepOpCode, opCode)(buf, pkt, tree, state)
-        end
-        return res
-    end
-end
-
-------------------------------------------------------------------------------
--- 4LW
-
-local function dissect4lw(buf, pkt, tree)
-    local fourlw = buf(0, 4):string()
-    local res
-    if FOUR_LETTER_WORDS[fourlw] ~= nil then
-        pkt.cols.info:set(string.format("4LW %s request", fourlw))
-        res = Direction.Client2Server
-    else
-        pkt.cols.info:set("4LW reply")
-        res = true -- Direction.Server2Client
-    end
-    tree:append_text(" [4LW]")
-    tree:add(f_4lw, buf())
-    return res
-end
-
-------------------------------------------------------------------------------
--- Watch Event
-
-local function parseWatchEvent(buf)
+local function dissectCheckWatchesRequest(buf, pkt, tree, _state)
     local offset = 0
     local remain = buf:len()
-    -- Result fields
-    local result_offset, result = parseResult(buf(offset))
-    if result_offset == -1 then
-        return -1, nil
-    end
-    offset = offset + result_offset
-    if offset + 4 > remain then
-        return -1, nil
-    end
-    local eventtype = buf(offset, 4)
-    offset = offset + 4
-    if offset + 4 > remain then
-        return -1, nil
-    end
-    local state = buf(offset, 4)
-    offset = offset + 4
     local path_offset, path = parseString(buf(offset))
     if path_offset == -1 then
-        return -1, nil
-    end
-    offset = offset + path_offset
-
-    return offset,
-        {
-            result = result,
-            eventtype = eventtype,
-            state = state,
-            path = path,
-        }
-end
-
-local function dissectWatchEvent(buf, pkt, tree)
-    local _, watchevent = parseWatchEvent(buf)
-    pkt.cols.info:set("WATCH EVENT")
-    tree:append_text(string.format(" [WATCH EVENT: %s]", watchEventTypes[watchevent.eventtype:int()]))
-    local t_zxid = tree:add(f_zxid, watchevent.result.zxid)
-    t_zxid:add(f_zxid_epoch, watchevent.result.zxid(0, 4))
-    t_zxid:add(f_zxid_count, watchevent.result.zxid(4, 4))
-    tree:add(f_err, watchevent.result.err)
-    tree:add(f_eventtype, watchevent.eventtype)
-    tree:add(f_state, watchevent.state)
-    tree:add(f_path, watchevent.path)
-    return DissRes.Server
-end
-
-------------------------------------------------------------------------------
--- SETWATCHES
-
--- XXX: Untested!
-
-local function parseSetWatchesRequest(buf)
-    local offset = 0
-    local remain = buf:len()
-
-    if offset + 4 > remain then
-        return -1, nil
-    end
-    local dataw_num = buf(offset, 4)
-    offset = offset + 4
-    local dataw = {}
-    for i = 0, dataw_num:uint() - 1 do
-        local path_offset, path = parseString(buf(offset))
-        if path_offset == -1 then
-            return -1, nil
-        end
-        offset = offset + path_offset
-        table:insert(dataw, path)
-    end
-    if offset + 4 > remain then
-        return -1, nil
-    end
-    local existsw_num = buf(offset, 4)
-    offset = offset + 4
-    local existsw = {}
-    for i = 0, existsw_num:uint() - 1 do
-        local path_offset, path = parseString(buf(offset))
-        if path_offset == -1 then
-            return -1, nil
-        end
-        offset = offset + path_offset
-        table:insert(existsw, path)
-    end
-    if offset + 4 > remain then
-        return -1, nil
-    end
-    local childw_num = buf(offset, 4)
-    offset = offset + 4
-    local childw = {}
-    for i = 0, childw_num:uint() - 1 do
-        local path_offset, path = parseString(buf(offset))
-        if path_offset == -1 then
-            return -1, nil
-        end
-        offset = offset + path_offset
-        table:insert(childw, path)
-    end
-
-    return offset,
-        {
-            dataw_num = dataw_num,
-            dataw = dataw,
-            existsw_num = existsw_num,
-            existsw = existsw,
-            childw_num = childw_num,
-            childw = childw,
-        }
-end
-
-local function reprSetWatchesRequest(setwatches_req, tree)
-    local t_dataw = tree:add(f_op) -- "Data Watches"
-    t_dataw:add(f_count, setwatches_req.dataw_num)
-    for i, path in ipairs(setwatches_req.dataw) do
-        t_dataw:add(f_path, path)
-    end
-    local t_existsw = tree:add(f_op) -- "Exists Watches"
-    t_existsw:add(f_count, setwatches_req.existsw_num)
-    for i, path in ipairs(setwatches_req.existsw) do
-        t_existsw:add(f_path, path)
-    end
-    local t_childw = tree:add(f_op) -- "Children Watches"
-    t_childw:add(f_count, setwatches_req.childw_num)
-    for i, path in ipairs(setwatches_req.childw) do
-        t_childw:add(f_path, path)
-    end
-end
-
-local function dissectSetWatchesRequest(buf, pkt, tree, _state)
-    local offset, setwatches_req = parseSetWatchesRequest(buf)
-    if offset == -1 then
         return false
     end
-    pkt.cols.info:set("SETWATCHES REQUEST")
-    tree:append_text(" [SETWATCHES REQUEST]")
-    reprSetWatchesRequest(setwatches_req, tree)
+    offset = offset + path_offset
+    if offset + 4 > remain then
+        return false
+    end
+    local watch_type = buf(offset, 4)
+    tree:add(f.path, path)
+    tree:add(f.eventtype, watch_type)
     return DissRes.Client
 end
 
+local function dissectRemoveWatchesRequest(buf, pkt, tree, _state)
+    local offset = 0
+    local remain = buf:len()
+    local path_offset, path = parseString(buf(offset))
+    if path_offset == -1 then
+        return false
+    end
+    offset = offset + path_offset
+    if offset + 4 > remain then
+        return false
+    end
+    local watch_type = buf(offset, 4)
+    tree:add(f.path, path)
+    tree:add(f.eventtype, watch_type)
+    return DissRes.Client
+end
+
+local function dissectGetEphemeralsRequest(buf, pkt, tree, _state)
+    local path_offset, prefix_path = parseString(buf)
+    if path_offset == -1 then
+        return false
+    end
+    tree:add(f.path, prefix_path)
+    return DissRes.Client
+end
+
+local function dissectGetEphemeralsReply(buf, pkt, tree, _state)
+    local offset, getchildren_rep = parseGetChildrenReply(buf)
+    if offset == -1 then
+        return false
+    end
+    tree:add(f.count, getchildren_rep.count)
+    for i, child in ipairs(getchildren_rep.children) do
+        tree:add(f.child, child)
+    end
+    return DissRes.Server
+end
+
+local function dissectGetAllChildrenNumberRequest(buf, pkt, tree, _state)
+    local path_offset, path = parseString(buf)
+    if path_offset == -1 then
+        return false
+    end
+    tree:add(f.path, path)
+    return DissRes.Client
+end
+
+local function dissectGetAllChildrenNumberReply(buf, pkt, tree, _state)
+    if buf:len() < 4 then
+        return false
+    end
+    tree:add(f.count, buf(0, 4))
+    return DissRes.Server
+end
+
+local function dissectAddWatchRequest(buf, pkt, tree, _state)
+    local offset = 0
+    local remain = buf:len()
+    local path_offset, path = parseString(buf(offset))
+    if path_offset == -1 then
+        return false
+    end
+    offset = offset + path_offset
+    if offset + 4 > remain then
+        return false
+    end
+    local mode = buf(offset, 4)
+    tree:add(f.path, path)
+    tree:add(f.mode, mode)
+    return DissRes.Client
+end
+
+local function dissectSetWatches2Request(buf, pkt, tree, _state)
+    local offset = 0
+    local remain = buf:len()
+
+    if offset + 8 > remain then
+        return false
+    end
+    local relative_zxid = buf(offset, 8)
+    offset = offset + 8
+    local t_zxid = tree:add(f.zxid, relative_zxid)
+    t_zxid:add(f.zxid_epoch, relative_zxid(0, 4))
+    t_zxid:add(f.zxid_count, relative_zxid(4, 4))
+
+    for i = 1, 5 do
+        if offset + 4 > remain then
+            break
+        end
+        local count = buf(offset, 4):int()
+        offset = offset + 4
+        if count > 0 then
+            for j = 1, count do
+                local p_offset, path = parseString(buf(offset))
+                if p_offset == -1 then
+                    break
+                end
+                offset = offset + p_offset
+                tree:add(f.path, path)
+            end
+        end
+    end
+    return DissRes.Client
+end
+
+local function dissectWhoAmIReply(buf, pkt, tree, _state)
+    local offset = 0
+    local remain = buf:len()
+    if offset + 4 > remain then
+        return false
+    end
+    local count = buf(offset, 4):int()
+    offset = offset + 4
+    if count > 0 then
+        for i = 1, count do
+            local s_offset, scheme = parseString(buf(offset))
+            if s_offset == -1 then
+                break
+            end
+            offset = offset + s_offset
+            local u_offset, user = parseString(buf(offset))
+            if u_offset == -1 then
+                break
+            end
+            offset = offset + u_offset
+            tree:add(f.scheme, scheme)
+            tree:add(f.credential, user)
+        end
+    end
+    return DissRes.Server
+end
+
+local function dissectSetSASLRequest(buf, pkt, tree, _state)
+    local offset, token = parseString(buf)
+    if offset == -1 then
+        return false
+    end
+    tree:add(f.data, token)
+    return DissRes.Client
+end
+
+local function dissectSetSASLReply(buf, pkt, tree, _state)
+    local offset, token = parseString(buf)
+    if offset == -1 then
+        return false
+    end
+    tree:add(f.data, token)
+    return DissRes.Server
+end
+
 ------------------------------------------------------------------------------
--- AUTH
+-- SETWATCHES & AUTH
 
 local function parseSetAuthRequest(buf)
     local offset = 0
@@ -1783,9 +1746,9 @@ local function parseSetAuthRequest(buf)
 end
 
 local function reprSetAuthRequest(setauth_req, tree)
-    tree:add(f_authtype, setauth_req.authtype)
-    tree:add(f_scheme, setauth_req.scheme)
-    tree:add(f_credential, setauth_req.credential)
+    tree:add(f.authtype, setauth_req.authtype)
+    tree:add(f.scheme, setauth_req.scheme)
+    tree:add(f.credential, setauth_req.credential)
 end
 
 local parseAuthReqOpCode = {
@@ -1831,10 +1794,10 @@ local function dissectAuthRequest(buf, pkt, tree, _state)
 
     pkt.cols.info:set("AUTH REQUEST")
     tree:append_text(" [AUTH REQ]")
-    tree:add(f_opCode, auth_req.opcode)
+    tree:add(f.opCode, auth_req.opcode)
     local req_repr_fun = reprAuthReqOpCode[auth_req.opcode:int()]
     if req_repr_fun == nil then
-        tree:add(f_data, auth_req.authdata)
+        tree:add(f.data, auth_req.authdata)
     else
         req_repr_fun(auth_req.authdata, tree)
     end
@@ -1865,6 +1828,237 @@ local function dissectAuthReply(buf, pkt, tree, _state)
     tree:append_text(" [AUTH REP]")
 
     reprResult(auth_rep.result, tree)
+    return DissRes.Server
+end
+
+------------------------------------------------------------------------------
+-- SETWATCHES
+
+local function parseSetWatchesRequest(buf)
+    local offset = 0
+    local remain = buf:len()
+
+    if offset + 4 > remain then
+        return -1, nil
+    end
+    local dataw_num = buf(offset, 4)
+    offset = offset + 4
+    local dataw = {}
+    for i = 0, dataw_num:uint() - 1 do
+        local path_offset, path = parseString(buf(offset))
+        if path_offset == -1 then
+            return -1, nil
+        end
+        offset = offset + path_offset
+        table.insert(dataw, path)
+    end
+    if offset + 4 > remain then
+        return -1, nil
+    end
+    local existsw_num = buf(offset, 4)
+    offset = offset + 4
+    local existsw = {}
+    for i = 0, existsw_num:uint() - 1 do
+        local path_offset, path = parseString(buf(offset))
+        if path_offset == -1 then
+            return -1, nil
+        end
+        offset = offset + path_offset
+        table.insert(existsw, path)
+    end
+    if offset + 4 > remain then
+        return -1, nil
+    end
+    local childw_num = buf(offset, 4)
+    offset = offset + 4
+    local childw = {}
+    for i = 0, childw_num:uint() - 1 do
+        local path_offset, path = parseString(buf(offset))
+        if path_offset == -1 then
+            return -1, nil
+        end
+        offset = offset + path_offset
+        table.insert(childw, path)
+    end
+
+    return offset,
+        {
+            dataw_num = dataw_num,
+            dataw = dataw,
+            existsw_num = existsw_num,
+            existsw = existsw,
+            childw_num = childw_num,
+            childw = childw,
+        }
+end
+
+local function reprSetWatchesRequest(setwatches_req, tree)
+    local t_dataw = tree:add(f.op)
+    t_dataw:add(f.count, setwatches_req.dataw_num)
+    for i, path in ipairs(setwatches_req.dataw) do
+        t_dataw:add(f.path, path)
+    end
+    local t_existsw = tree:add(f.op)
+    t_existsw:add(f.count, setwatches_req.existsw_num)
+    for i, path in ipairs(setwatches_req.existsw) do
+        t_existsw:add(f.path, path)
+    end
+    local t_childw = tree:add(f.op)
+    t_childw:add(f.count, setwatches_req.childw_num)
+    for i, path in ipairs(setwatches_req.childw) do
+        t_childw:add(f.path, path)
+    end
+end
+
+local function dissectSetWatchesRequest(buf, pkt, tree, _state)
+    local offset, setwatches_req = parseSetWatchesRequest(buf)
+    if offset == -1 then
+        return false
+    end
+    pkt.cols.info:set("SETWATCHES REQUEST")
+    tree:append_text(" [SETWATCHES REQUEST]")
+    reprSetWatchesRequest(setwatches_req, tree)
+    return DissRes.Client
+end
+
+------------------------------------------------------------------------------
+-- opCode dispatcher
+local dissectReqOpCode = {
+    [-11] = dissectCloseRequest,
+    [1] = dissectCreateRequest,
+    [2] = dissectDeleteRequest,
+    [3] = dissectExistsRequest,
+    [4] = dissectGetDataRequest,
+    [5] = dissectSetDataRequest,
+    [6] = dissectGetAclRequest,
+    [7] = dissectSetAclRequest,
+    [8] = dissectGetChildrenRequest,
+    [9] = dissectSyncRequest,
+    [12] = dissectGetChildren2Request,
+    [13] = dissectCheckRequest,
+    [14] = dissectMultiRequest,
+    [15] = dissectCreate2Request,
+    [16] = dissectReconfigRequest,
+    [17] = dissectCheckWatchesRequest,
+    [18] = dissectRemoveWatchesRequest,
+    [19] = dissectCreateContainerRequest,
+    [20] = dissectDeleteRequest,
+    [21] = dissectCreateTTLRequest,
+    [100] = dissectAuthRequest,
+    [101] = dissectSetWatchesRequest,
+    [102] = dissectSetSASLRequest,
+    [103] = dissectGetEphemeralsRequest,
+    [104] = dissectGetAllChildrenNumberRequest,
+    [105] = dissectSetWatches2Request,
+    [106] = dissectAddWatchRequest,
+}
+
+local dissectRepOpCode = {
+    [-11] = dissectCloseReply,
+    [1] = dissectCreateReply,
+    -- [2] = dissectDeleteReply,
+    [3] = dissectExistsReply,
+    [4] = dissectGetDataReply,
+    [5] = dissectSetDataReply,
+    [6] = dissectGetAclReply,
+    [7] = dissectSetAclReply,
+    [8] = dissectGetChildrenReply,
+    [9] = dissectSyncReply,
+    [12] = dissectGetChildren2Reply,
+    -- [13] = dissectCheckReply,
+    [14] = dissectMultiReply,
+    [15] = dissectCreate2Reply,
+    [16] = dissectReconfigReply,
+    [19] = dissectCreateContainerReply,
+    [21] = dissectCreateTTLReply,
+    [102] = dissectSetSASLReply,
+    [103] = dissectGetEphemeralsReply,
+    [104] = dissectGetAllChildrenNumberReply,
+    [107] = dissectWhoAmIReply,
+}
+
+local function dispatchOpCodeDissector(buf, pkt, tree, state, opCode)
+    -- Dissect a request/reply based on opCode (with a default fallback)
+    if state.dir == Direction.Client2Server then
+        return dispatch(dissectReqOpCode, opCode)(buf, pkt, tree, state)
+    elseif state.dir == Direction.Server2Client then
+        return dispatch(dissectRepOpCode, opCode)(buf, pkt, tree, state)
+    elseif state.dir == nil then
+        -- Try to parse as client packet then as server packet
+        local res = dispatch(dissectReqOpCode, opCode)(buf, pkt, tree, state)
+        if res == false then
+            res = dispatch(dissectRepOpCode, opCode)(buf, pkt, tree, state)
+        end
+        return res
+    end
+end
+
+------------------------------------------------------------------------------
+-- 4LW
+
+local function dissect4lw(buf, pkt, tree)
+    local fourlw = buf(0, 4):string()
+    local res
+    if FOUR_LETTER_WORDS[fourlw] ~= nil then
+        pkt.cols.info:set(string.format("4LW %s request", fourlw))
+        res = Direction.Client2Server
+    else
+        pkt.cols.info:set("4LW reply")
+        res = true -- Direction.Server2Client
+    end
+    tree:append_text(" [4LW]")
+    tree:add(f["4lw"], buf())
+    return res
+end
+
+------------------------------------------------------------------------------
+-- Watch Event
+
+local function parseWatchEvent(buf)
+    local offset = 0
+    local remain = buf:len()
+    -- Result fields
+    local result_offset, result = parseResult(buf(offset))
+    if result_offset == -1 then
+        return -1, nil
+    end
+    offset = offset + result_offset
+    if offset + 4 > remain then
+        return -1, nil
+    end
+    local eventtype = buf(offset, 4)
+    offset = offset + 4
+    if offset + 4 > remain then
+        return -1, nil
+    end
+    local state = buf(offset, 4)
+    offset = offset + 4
+    local path_offset, path = parseString(buf(offset))
+    if path_offset == -1 then
+        return -1, nil
+    end
+    offset = offset + path_offset
+
+    return offset,
+        {
+            result = result,
+            eventtype = eventtype,
+            state = state,
+            path = path,
+        }
+end
+
+local function dissectWatchEvent(buf, pkt, tree)
+    local _, watchevent = parseWatchEvent(buf)
+    pkt.cols.info:set("WATCH EVENT")
+    tree:append_text(string.format(" [WATCH EVENT: %s]", watchEventTypes[watchevent.eventtype:int()]))
+    local t_zxid = tree:add(f.zxid, watchevent.result.zxid)
+    t_zxid:add(f.zxid_epoch, watchevent.result.zxid(0, 4))
+    t_zxid:add(f.zxid_count, watchevent.result.zxid(4, 4))
+    tree:add(f.err, watchevent.result.err)
+    tree:add(f.eventtype, watchevent.eventtype)
+    tree:add(f.state, watchevent.state)
+    tree:add(f.path, watchevent.path)
     return DissRes.Server
 end
 
@@ -1923,12 +2117,12 @@ local function dissectConnectRequest(buf, pkt, tree)
     end
     pkt.cols.info:set("CONNECT REQUEST")
     tree:append_text(" [CONNECT REQ]")
-    tree:add(f_protoversion, conn_req.protoversion)
-    tree:add(f_zxid, conn_req.zxid)
-    tree:add(f_timeout, conn_req.timeout)
-    tree:add(f_session, conn_req.session)
-    tree:add(f_passwd, conn_req.passwd)
-    tree:add(f_readonly, conn_req.readonly)
+    tree:add(f.protoversion, conn_req.protoversion)
+    tree:add(f.zxid, conn_req.zxid)
+    tree:add(f.timeout, conn_req.timeout)
+    tree:add(f.session, conn_req.session)
+    tree:add(f.passwd, conn_req.passwd)
+    tree:add(f.readonly, conn_req.readonly)
     return DissRes.Client
 end
 
@@ -1978,11 +2172,11 @@ local function dissectConnectReply(buf, pkt, tree)
     end
     pkt.cols.info:set("CONNECT REPLY")
     tree:append_text(" [CONNECT REP]")
-    tree:add(f_protoversion, conn_rep.protoversion)
-    tree:add(f_timeout, conn_rep.timeout)
-    tree:add(f_session, conn_rep.session)
-    tree:add(f_passwd, conn_rep.passwd)
-    tree:add(f_readonly, conn_rep.readonly)
+    tree:add(f.protoversion, conn_rep.protoversion)
+    tree:add(f.timeout, conn_rep.timeout)
+    tree:add(f.session, conn_rep.session)
+    tree:add(f.passwd, conn_rep.passwd)
+    tree:add(f.readonly, conn_rep.readonly)
     return DissRes.Server
 end
 
@@ -1994,7 +2188,7 @@ local function dissectPingRequest(buf, pkt, tree)
     if buf:len() ~= 4 then
         return false
     end
-    tree:add(f_opCode, buf(0, 4))
+    tree:add(f.opCode, buf(0, 4))
     return DissRes.Client
 end
 
@@ -2004,7 +2198,7 @@ local function dissectPingReply(buf, pkt, tree)
         return false
     end
     -- XXX: Parse ping reply payload
-    tree:add(f_data, buf(0, 12))
+    tree:add(f.data, buf(0, 12))
     return DissRes.Server
 end
 
@@ -2050,7 +2244,7 @@ local function dissect(buf, pkt, tree, state)
         return false
     end
 
-    tree:add(f_len, buf(offset, 4))
+    tree:add(f.len, buf(offset, 4))
     offset = offset + 4
     local xidBuf = buf(offset, 4)
     local xid = xidBuf:int()
@@ -2061,19 +2255,19 @@ local function dissect(buf, pkt, tree, state)
         -- NOTE: CONNECT packet starts *on* the xid, so for those, do not
         -- extract field/update offset
         if xid ~= 0 then
-            tree:add(f_xid, xidBuf)
+            tree:add(f.xid, xidBuf)
             offset = offset + 4
         end
         return dispatchXIDDissector(buf(offset), pkt, tree, state, xid)
     else
         -- Regular operation
-        tree:add(f_xid, xidBuf)
+        tree:add(f.xid, xidBuf)
         offset = offset + 4
         local opCode
         if state.dir == Direction.Client2Server then
             -- New request, record the opCode
             local opCodeBuf = buf(offset, 4)
-            tree:add(f_opCode, opCodeBuf)
+            tree:add(f.opCode, opCodeBuf)
             offset = offset + 4
             -- record the opCode
             opCode = opCodeBuf:int()
@@ -2085,7 +2279,7 @@ local function dissect(buf, pkt, tree, state)
             -- print("opCode", opCode)
             if opCode ~= nil then
                 -- state.xids[xid] = nil
-                tree:add(f_opCode, xidBuf, opCode) -- XXX.set_generated()
+                tree:add(f.opCode, xidBuf, opCode) -- XXX.set_generated()
                 tree:append_text(string.format(" [%s REP]", opCodes[opCode]))
             end
             local result_offset, result = parseResult(buf(offset))
@@ -2094,6 +2288,12 @@ local function dissect(buf, pkt, tree, state)
             end
             offset = offset + result_offset
             reprResult(result, tree)
+            if result.err:int() ~= 0 then
+                if offset < remain then
+                    tree:add(f.data, buf(offset))
+                end
+                return DissRes.Server
+            end
         else
             -- We don't know the direction.
             return false
@@ -2104,7 +2304,7 @@ local function dissect(buf, pkt, tree, state)
         -- check if we know about this XID
         if opCode == nil then
             -- We don't know about this request, dump the payload
-            tree:add(f_data, buf(offset))
+            tree:add(f.data, buf(offset))
             return DissRes.Server
         else
             return dispatchOpCodeDissector(buf(offset), pkt, tree, state, opCode)
@@ -2139,59 +2339,60 @@ local default_settings = {
 ZabProto.prefs.port = Pref.uint("Port number", default_settings.port, "The TCP port number for ZAB")
 
 ZabProto.fields = {
-    f_pkt,
-    f_op, -- Structural fields
-    f_4lw,
-    f_len,
-    f_xid,
-    f_data,
-    f_opCode,
-    f_path,
-    f_watch,
-    f_protoversion,
-    f_zxid,
-    f_zxid_epoch,
-    f_zxid_count,
-    f_timeout,
-    f_session,
-    f_authtype,
-    f_perms,
-    f_scheme,
-    f_credential,
-    f_datalength,
-    f_flags,
-    f_ephemeral,
-    f_sequence,
-    f_container,
-    f_ttl,
-    f_joining,
-    f_leaving,
-    f_newmembers,
-    f_config_id,
-    f_done,
-    f_err,
-    f_version,
-    f_eventtype,
-    f_state,
-    f_passwd,
-    f_readonly,
-    f_count,
-    f_child,
-    f_czxid,
-    f_czxid_epoch,
-    f_czxid_count,
-    f_mzxid,
-    f_mzxid_epoch,
-    f_mzxid_count,
-    f_ctime,
-    f_mtime,
-    f_cversion,
-    f_aversion,
-    f_ephemeralowner,
-    f_numchildren,
-    f_pzxid,
-    f_pzxid_epoch,
-    f_pzxid_count,
+    f.pkt,
+    f.op, -- Structural fields
+    f["4lw"],
+    f.len,
+    f.xid,
+    f.data,
+    f.opCode,
+    f.path,
+    f.watch,
+    f.protoversion,
+    f.zxid,
+    f.zxid_epoch,
+    f.zxid_count,
+    f.timeout,
+    f.session,
+    f.authtype,
+    f.perms,
+    f.scheme,
+    f.credential,
+    f.datalength,
+    f.flags,
+    f.ephemeral,
+    f.sequence,
+    f.container,
+    f.ttl,
+    f.joining,
+    f.leaving,
+    f.newmembers,
+    f.config_id,
+    f.done,
+    f.err,
+    f.version,
+    f.eventtype,
+    f.state,
+    f.passwd,
+    f.readonly,
+    f.count,
+    f.child,
+    f.mode,
+    f.czxid,
+    f.czxid_epoch,
+    f.czxid_count,
+    f.mzxid,
+    f.mzxid_epoch,
+    f.mzxid_count,
+    f.ctime,
+    f.mtime,
+    f.cversion,
+    f.aversion,
+    f.ephemeralowner,
+    f.numchildren,
+    f.pzxid,
+    f.pzxid_epoch,
+    f.pzxid_count,
 }
 
 function ZabProto.dissector(buf, pkt, root)
@@ -2215,6 +2416,29 @@ function ZabProto.dissector(buf, pkt, root)
     elseif CLIENTS[recipient] ~= nil then
         state.xids = CLIENTS[recipient]
         state.dir = Direction.Server2Client
+    else
+        local function isZabPort(port)
+            for _, p in ipairs(default_settings.ports) do
+                if p == port then
+                    return true
+                end
+            end
+            return false
+        end
+
+        if isZabPort(pkt.dst_port) then
+            if CLIENTS[sender] == nil then
+                CLIENTS[sender] = {}
+            end
+            state.xids = CLIENTS[sender]
+            state.dir = Direction.Client2Server
+        elseif isZabPort(pkt.src_port) then
+            if CLIENTS[recipient] == nil then
+                CLIENTS[recipient] = {}
+            end
+            state.xids = CLIENTS[recipient]
+            state.dir = Direction.Server2Client
+        end
     end
 
     -- Handle fragmentation or combining of packets
@@ -2244,7 +2468,7 @@ function ZabProto.dissector(buf, pkt, root)
             -- This is 'AAAA' as int (or a length of about 1GB)
             packet_length = remain -- 4lw eats the whole packet
             local pktBuf = buf(start_offset)
-            local t_pkt = tree:add(f_pkt, pktBuf)
+            local t_pkt = tree:add(f.pkt, pktBuf)
             res = dissect4lw(pktBuf, pkt, t_pkt)
         elseif packet_length > (remain - offset) then
             pkt.desegment_offset = start_offset -- restart @ packet start
@@ -2254,7 +2478,7 @@ function ZabProto.dissector(buf, pkt, root)
         else -- packet_length <= buf:len()
             -- We can parse at least one packet, from start_offset, [length, packet]
             local pktBuf = buf(start_offset, 4 + packet_length)
-            local t_pkt = tree:add(f_pkt, pktBuf)
+            local t_pkt = tree:add(f.pkt, pktBuf)
             res = dissect(pktBuf, pkt, t_pkt, state)
         end
 

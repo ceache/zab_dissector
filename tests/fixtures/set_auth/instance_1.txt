@@ -1,0 +1,15 @@
+=== Packet 1 ===
+zab.authtype	0
+zab.credential	f7bac70c959b4831921cb5c38929562a:9e8558714b25497a86c08ac213b2ec70
+zab.length	91
+zab.opcode	100
+zab.scheme	digest
+zab.xid	-4
+
+=== Packet 2 ===
+zab.err	0
+zab.length	16
+zab.xid	-4
+zab.zxid	0x0000000000000000
+zab.zxid.count	0
+zab.zxid.epoch	0

@@ -1,0 +1,11 @@
+{
+  "opcode": "GET_CHILDREN2",
+  "opcode_id": 12,
+  "instances": [
+    {
+      "description": "Extracted get_children2 request and response from capture",
+      "file": "instance_1.pcapng",
+      "enabled": true
+    }
+  ]
+}

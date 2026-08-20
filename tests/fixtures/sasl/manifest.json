@@ -1,0 +1,11 @@
+{
+  "opcode": "SASL",
+  "opcode_id": 102,
+  "instances": [
+    {
+      "description": "Extracted sasl request and response from capture",
+      "file": "instance_1.pcapng",
+      "enabled": true
+    }
+  ]
+}
