@@ -1,0 +1,11 @@
+{
+  "port": 2181,
+  "description": "ZAB Reconfig opcode test fixtures",
+  "instances": [
+    {
+      "file": "instance_1.pcapng",
+      "description": "ZAB Reconfig/Create2 opcode (Success err=0)",
+      "enabled": true
+    }
+  ]
+}

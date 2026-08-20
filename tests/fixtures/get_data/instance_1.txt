@@ -1,0 +1,42 @@
+=== Packet 1 ===
+zab.length	45
+zab.passwd	00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+zab.protocolversion	0
+zab.readonly	0
+zab.session	0x0000000000000000
+zab.timeout	10000
+zab.zxid	0x0000000000000000
+
+=== Packet 2 ===
+zab.length	113
+zab.opcode	4
+zab.path	/test_cache.py::TestKazooTreeCache::test_subtree_operation-fc90dbcb/759a55cb2cf4492382d361c2b248054d
+zab.watch	1
+zab.xid	7
+
+=== Packet 3 ===
+zab.aversion	0
+zab.ctime	1787186924401
+zab.cversion	0
+zab.czxid	0x0000000100000072
+zab.czxid.count	114
+zab.czxid.epoch	1
+zab.data	
+zab.datalength	0
+zab.ephemeralowner	0x0000000000000000
+zab.err	0
+zab.length	88
+zab.mtime	1787186924401
+zab.mzxid	0x0000000100000072
+zab.mzxid.count	114
+zab.mzxid.epoch	1
+zab.numchildren	0
+zab.opcode	4
+zab.pzxid	0x0000000100000072
+zab.pzxid.count	114
+zab.pzxid.epoch	1
+zab.version	0
+zab.xid	7
+zab.zxid	0x0000000100000072
+zab.zxid.count	114
+zab.zxid.epoch	1

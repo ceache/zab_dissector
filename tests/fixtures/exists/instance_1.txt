@@ -1,0 +1,41 @@
+=== Packet 1 ===
+zab.length	45
+zab.passwd	00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+zab.protocolversion	0
+zab.readonly	0
+zab.session	0x0000000000000000
+zab.timeout	10000
+zab.zxid	0x0000000000000000
+
+=== Packet 2 ===
+zab.length	14
+zab.opcode	3
+zab.path	/
+zab.watch	0
+zab.xid	2
+
+=== Packet 3 ===
+zab.aversion	0
+zab.ctime	0
+zab.cversion	0
+zab.czxid	0x0000000000000000
+zab.czxid.count	0
+zab.czxid.epoch	0
+zab.datalength	0
+zab.ephemeralowner	0x0000000000000000
+zab.err	0
+zab.length	84
+zab.mtime	0
+zab.mzxid	0x0000000000000000
+zab.mzxid.count	0
+zab.mzxid.epoch	0
+zab.numchildren	2
+zab.opcode	3
+zab.pzxid	0x0000000100000002
+zab.pzxid.count	2
+zab.pzxid.epoch	1
+zab.version	0
+zab.xid	2
+zab.zxid	0x0000000100000004
+zab.zxid.count	4
+zab.zxid.epoch	1

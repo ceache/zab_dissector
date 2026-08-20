@@ -44,3 +44,10 @@ luac.out
 specs/
 .opencode/
 
+# Python
+__pycache__/
+*.pyc
+
+# Nix
+result
+.direnv/
