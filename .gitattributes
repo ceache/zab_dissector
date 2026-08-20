@@ -1,0 +1,21 @@
+# Normalize line endings for text files on checkout
+* text=auto
+
+# Shell scripts must stay LF so scripts/lint.sh and format.sh run anywhere
+*.sh text eol=lf
+
+# Lua source keeps LF to match luacheck/stylua output and avoid EOL churn
+*.lua text eol=lf
+
+# Nix and YAML are human-edited config; keep LF for consistent diffing
+*.nix text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Markdown and TOML: gentle normalization, no hard forcing
+*.md text eol=lf
+*.toml text eol=lf
+
+# Capture files are binary and must never be re-encoded or diffed as text
+*.pcap binary
+*.pcapng binary
