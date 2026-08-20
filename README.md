@@ -92,3 +92,21 @@ $ luarocks install luacheck   # Lua linter
 $ brew install stylua         # or: cargo install stylua
 ```
 
+The recommended way to get the exact tool versions used by CI is the Nix dev
+shell defined by `flake.nix`:
+
+``` shell
+$ nix develop                                            # enter the dev shell
+$ nix develop --command ./scripts/lint.sh                # lint (no shell entry)
+$ nix develop --command ./scripts/format.sh --check      # format check (no shell entry)
+```
+
+`nix develop` provides `luacheck` and `stylua` pinned by `flake.lock`, so local
+runs and CI use identical tooling.
+
+Every pull request is validated automatically by the CI workflow
+`.github/workflows/lua-checks.yml`, which runs exactly these two commands
+(`./scripts/lint.sh` and `./scripts/format.sh --check`) inside the Nix dev
+shell. A PR only turns green when both checks pass, so the same commands used
+locally are what CI enforces.
+
